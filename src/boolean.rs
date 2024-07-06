@@ -14,6 +14,10 @@ impl Boolean {
             io::stdout().flush().unwrap();
             let mut input = String::new();
             io::stdin().read_line(&mut input).unwrap();
+            if input.trim().is_empty() {
+                Boolean::sim_report("Error: No input provided.");
+                continue
+            }
 
             let mut lexer = lexer::Lexer::new(input);
             let tokens = lexer.scan_tokens().clone();

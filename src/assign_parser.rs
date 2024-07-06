@@ -52,18 +52,18 @@ impl ExprVisitor<()> for AssignParser {
 }
 
 impl AssignParser {
-    pub fn analyze(&mut self, stmt: Stmt) -> AnalysisResult {
+    pub fn analyze(&mut self, stmt: Stmt) -> Result<AnalysisResult, &'static str> {
         let Stmt::Assign { name, value } = stmt
         else {
-            panic!("Invalid statement");
+            return Err("Expected Assign statement");
         };
 
         value.accept(self);
-        AnalysisResult {
+        Ok(AnalysisResult {
             dependent_var: name.clone(),
             independent_vars: self.independent_vars.clone(),
             environment: self.environment.clone(),
             expr: value.clone(),
-        }
+        })
     }
 }

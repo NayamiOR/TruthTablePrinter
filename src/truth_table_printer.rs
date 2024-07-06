@@ -2,6 +2,7 @@ use prettytable::{Cell, Row, Table};
 
 use crate::assign_parser::AnalysisResult;
 use crate::assign_parser::AssignParser;
+use crate::boolean::Boolean;
 use crate::interpreter::Interpreter;
 use crate::token::Literal;
 
@@ -21,12 +22,17 @@ impl TruthTablePrinter {
         }
     }
     pub fn print(&mut self, stmt: crate::stmt::Stmt) {
+        let result = self.parser.analyze(stmt);
+        if let Err(e) = result {
+            Boolean::sim_error(e);
+            return;
+        }
         let AnalysisResult {
             dependent_var,
             mut independent_vars,
             environment,
             expr
-        } = self.parser.analyze(stmt);
+        } = result.unwrap();
         independent_vars.sort();
         self.interpreter.update_environment(environment.clone());
 

@@ -19,9 +19,15 @@ impl Boolean {
             let tokens = lexer.scan_tokens().clone();
 
             let mut parser = parser::Parser::new(tokens);
-            let statements = &parser.parse()[0];
+            let statements = parser.parse();
+            if let Err(e) = statements {
+                Boolean::sim_error(e);
+                continue;
+            }
+            let statements = statements.unwrap();
+            let statement = &statements[0];
             let mut printer = TruthTablePrinter::new();
-            printer.print(statements.clone());
+            printer.print(statement.clone());
         }
     }
 

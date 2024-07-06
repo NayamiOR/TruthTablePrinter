@@ -1,4 +1,3 @@
-use crate::boolean::Boolean;
 use crate::expr::Expr;
 use crate::stmt::Stmt;
 use crate::token::{Literal, Token};
@@ -18,110 +17,109 @@ impl Parser {
         }
     }
 
-    pub fn parse(&mut self) -> Vec<Stmt> {
+    pub fn parse(&mut self) -> Result<Vec<Stmt>, &'static str> {
         let mut statements: Vec<Stmt> = Vec::new();
         while !self.is_at_end() {
-            statements.push(self.statement());
+            statements.push(self.statement()?);
         }
-        statements
+        Ok(statements)
     }
 
-    fn expression(&mut self) -> Expr {
+    fn expression(&mut self) -> Result<Expr, &'static str> {
         self.assignment()
     }
 
-    fn statement(&mut self) -> Stmt {
+    fn statement(&mut self) -> Result<Stmt, &'static str> {
         if self.check(TokenType::Identifier) && self.check_next(TokenType::Eq) {
             return self.assign_statement();
         }
         self.expression_statement()
     }
 
-    fn assign_statement(&mut self) -> Stmt {
-        // let name = self.previous().lexeme.clone();
-        // self.advance();
+    fn assign_statement(&mut self) -> Result<Stmt, &'static str> {
         let name = self.advance().lexeme.clone();
         self.advance();  // consume '='
         let value = self.expression();
-        self.consume(Semicolon, "Expect ';' after value.");
-        Stmt::Assign { name, value }
+        let Ok(v) = value else { return Err("Expect value."); };
+        self.consume(Semicolon, "Expect ';' after value.")?;
+        Ok(Stmt::Assign { name, value: v })
     }
 
-    fn expression_statement(&mut self) -> Stmt {
-        let expr = self.expression();
-        self.consume(Semicolon, "Expect ';' after expression.");
-        // dbg!(&expr);
-        Stmt::Expression { value: expr }
+    fn expression_statement(&mut self) -> Result<Stmt, &'static str> {
+        let expr = self.expression()?;
+        self.consume(Semicolon, "Expect ';' after expression.")?;
+        Ok(Stmt::Expression { value: expr })
     }
 
-    fn assignment(&mut self) -> Expr {
-        let expr = self.term();
+    fn assignment(&mut self) -> Result<Expr, &'static str> {
+        let expr = self.term()?;
         if self.match_token(vec![TokenType::Eq]) {
-            let value = self.assignment();
+            let value = self.assignment()?;
 
-            if let Expr::Variable(name) = expr {
-                return Expr::Assign(name, Box::new(value));
+            return if let Expr::Variable(name) = expr {
+                Ok(Expr::Assign(name, Box::new(value)))
             } else {
-                panic!("Invalid assignment target.");
+                Err("Invalid assignment target.")
             }
         }
-        expr
+        Ok(expr)
     }
-    fn term(&mut self) -> Expr {
-        let mut expr = self.factor();
+    fn term(&mut self) -> Result<Expr, &'static str> {
+        let mut expr = self.factor()?;
         while self.match_token(vec![TokenType::Or]) {
             let operator = self.previous();
-            let right = self.factor();
+            let right = self.factor()?;
             expr = Expr::Binary(Box::new(expr), operator, Box::new(right));
         }
-        expr
+        Ok(expr)
     }
 
-    fn factor(&mut self) -> Expr {
-        let mut expr = self.unary();
+    fn factor(&mut self) -> Result<Expr, &'static str> {
+        let mut expr = self.unary()?;
         while self.match_token(vec![TokenType::And]) {
             let operator = self.previous();
-            let right = self.unary();
+            let right = self.unary()?;
             expr = Expr::Binary(Box::new(expr), operator, Box::new(right));
         }
-        expr
+        Ok(expr)
     }
 
-    fn unary(&mut self) -> Expr {
+    fn unary(&mut self) -> Result<Expr, &'static str> {
         if self.check(TokenType::PreNot) {
             let operator = self.advance();
-            let right = self.unary();
-            return Expr::Unary(operator, Box::new(right));
+            let right = self.unary()?;
+            return Ok(Expr::Unary(operator, Box::new(right)));
         }
-        let mut expr = self.primary();
+        let mut expr = self.primary()?;
         while self.match_token(vec![TokenType::Not]) {
             let operator = self.previous();
             expr = Expr::Unary(operator, Box::new(expr));
         }
-        expr
+        Ok(expr)
     }
 
-    fn primary(&mut self) -> Expr {
+    fn primary(&mut self) -> Result<Expr, &'static str> {
         if self.match_token(vec![TokenType::False]) {
-            return Expr::Literal(Literal::Boolean(false));
+            return Ok(Expr::Literal(Literal::Boolean(false)));
         }
         if self.match_token(vec![TokenType::True]) {
-            return Expr::Literal(Literal::Boolean(true));
+            return Ok(Expr::Literal(Literal::Boolean(true)));
         }
         if self.match_token(vec![TokenType::Num]) {
-            return Expr::Literal(Literal::Number(self.previous().lexeme.parse().unwrap()));
+            return Ok(Expr::Literal(Literal::Number(self.previous().lexeme.parse().unwrap())));
         }
 
         if self.match_token(vec![TokenType::Identifier]) {
-            return Expr::Variable(self.previous());
+            return Ok(Expr::Variable(self.previous()));
         }
 
         if self.match_token(vec![TokenType::LeftParen]) {
-            let expr = self.expression();
-            self.consume(TokenType::RightParen, "Expect ')' after expression.");
-            return Expr::Grouping(Box::new(expr));
+            let expr = self.expression()?;
+            self.consume(TokenType::RightParen, "Expect ')' after expression.")?;
+            return Ok(Expr::Grouping(Box::new(expr)));
         }
-        panic!("Expect expression.");
+
+        Err("Expect expression.")
     }
 
     fn match_token(&mut self, token_type: Vec<TokenType>) -> bool {
@@ -134,11 +132,11 @@ impl Parser {
         false
     }
 
-    fn consume(&mut self, token_type: TokenType, message: &str) -> Token {
+    fn consume(&mut self, token_type: TokenType, message: &'static str) -> Result<Token, &'static str> {
         if !self.check(token_type) {
-            Boolean::sim_error(message);
+            return Err(message);
         }
-        self.advance()
+        Ok(self.advance())
     }
 
     fn check(&self, token_type: TokenType) -> bool {

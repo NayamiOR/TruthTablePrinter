@@ -1,8 +1,7 @@
+use crate::environment::Environment;
 use crate::expr::{Expr, ExprVisitor};
-use crate::stmt::StmtVisitor;
 use crate::token::{Literal, Token};
 use crate::token_type::TokenType;
-use crate::environment::Environment;
 
 pub struct Interpreter {
     pub environment: Environment,
@@ -50,17 +49,6 @@ impl ExprVisitor<bool> for Interpreter {
     }
 }
 
-impl StmtVisitor<()> for Interpreter {
-    fn visit_assign_stmt(&mut self, _name: &String, _value: &Expr) {
-        let value = self.evaluate(_value);
-        self.environment.assign(_name.clone(), Literal::Boolean(value));
-    }
-
-    fn visit_expression_stmt(&mut self, value: &Expr) {
-        self.evaluate(value);
-    }
-}
-
 impl Interpreter {
     pub fn new() -> Self {
         Interpreter {
@@ -73,16 +61,6 @@ impl Interpreter {
     }
     pub fn evaluate(&mut self, expr: &Expr) -> bool {
         expr.accept(self)
-    }
-
-    fn execute(&mut self, stmt: &crate::stmt::Stmt) {
-        stmt.accept(self);
-    }
-
-    pub fn interpret(&mut self, stmts: &Vec<crate::stmt::Stmt>) {
-        for stmt in stmts {
-            self.execute(stmt);
-        }
     }
 }
 

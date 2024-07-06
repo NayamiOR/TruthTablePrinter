@@ -18,20 +18,10 @@ pub struct AnalysisResult {
 
 impl AssignParser {
     pub fn new() -> Self {
-        let mut dependent_vars = Vec::new();
-        let mut independent_var = "".to_string();
+        let dependent_vars = Vec::new();
+        let independent_var = "".to_string();
         AssignParser {
             environment: Environment::new(),
-            dependent_var: independent_var,
-            independent_vars: dependent_vars,
-        }
-    }
-
-    pub fn new_with_environment(environment: Environment) -> Self {
-        let mut dependent_vars = Vec::new();
-        let mut independent_var = "".to_string();
-        AssignParser {
-            environment,
             dependent_var: independent_var,
             independent_vars: dependent_vars,
         }
@@ -64,7 +54,9 @@ impl ExprVisitor<()> for AssignParser {
 impl AssignParser {
     pub fn analyze(&mut self, stmt: Stmt) -> AnalysisResult {
         let Stmt::Assign { name, value } = stmt
-        else { panic!("Invalid statement") };
+        else {
+            panic!("Invalid statement");
+        };
 
         value.accept(self);
         AnalysisResult {

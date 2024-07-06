@@ -1,14 +1,13 @@
 use prettytable::{Cell, Row, Table};
-use crate::assign_parser::AssignParser;
+
 use crate::assign_parser::AnalysisResult;
-use crate::environment::Environment;
+use crate::assign_parser::AssignParser;
 use crate::interpreter::Interpreter;
 use crate::token::Literal;
 
 pub struct TruthTablePrinter {
     parser: AssignParser,
     interpreter: Interpreter,
-    environment: Environment,
 }
 
 impl TruthTablePrinter {
@@ -19,14 +18,13 @@ impl TruthTablePrinter {
         TruthTablePrinter {
             parser,
             interpreter,
-            environment: Environment::new(),
         }
     }
     pub fn print(&mut self, stmt: crate::stmt::Stmt) {
         let AnalysisResult {
             dependent_var,
             mut independent_vars,
-            mut environment,
+            environment,
             expr
         } = self.parser.analyze(stmt);
         independent_vars.sort();

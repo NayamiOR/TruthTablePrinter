@@ -1,6 +1,7 @@
-use crate::token::{Literal, Token};
+use crate::boolean::Boolean;
 use crate::expr::Expr;
 use crate::stmt::Stmt;
+use crate::token::{Literal, Token};
 use crate::token_type::TokenType;
 use crate::token_type::TokenType::Semicolon;
 
@@ -33,7 +34,7 @@ impl Parser {
         if self.check(TokenType::Identifier) && self.check_next(TokenType::Eq) {
             return self.assign_statement();
         }
-        return self.expression_statement();
+        self.expression_statement()
     }
 
     fn assign_statement(&mut self) -> Stmt {
@@ -54,7 +55,7 @@ impl Parser {
     }
 
     fn assignment(&mut self) -> Expr {
-        let mut expr = self.term();
+        let expr = self.term();
         if self.match_token(vec![TokenType::Eq]) {
             let value = self.assignment();
 
@@ -135,7 +136,7 @@ impl Parser {
 
     fn consume(&mut self, token_type: TokenType, message: &str) -> Token {
         if !self.check(token_type) {
-            panic!("{}", message);
+            Boolean::sim_error(message);
         }
         self.advance()
     }
@@ -162,7 +163,7 @@ impl Parser {
     }
 
     fn is_at_end(&self) -> bool {
-        self.peek().token_type == TokenType::EOF
+        self.peek().token_type == TokenType::Eof
     }
 
     fn peek(&self) -> Token {
@@ -171,7 +172,7 @@ impl Parser {
 
     fn peek_next(&self) -> Token {
         if self.is_at_end() {
-            return Token::new(TokenType::EOF, "".to_string());
+            return Token::new(TokenType::Eof, "".to_string());
         }
         self.tokens[self.current + 1].clone()
     }

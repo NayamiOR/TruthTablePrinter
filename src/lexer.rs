@@ -1,10 +1,9 @@
-use crate::token_type::TokenType;
-use crate::token::Token;
 use crate::boolean::Boolean;
+use crate::token::Token;
+use crate::token_type::TokenType;
 
 pub struct Lexer {
     input: String,
-    position: usize,
     start: usize,
     current: usize,
     tokens: Vec<Token>,
@@ -14,7 +13,6 @@ impl Lexer {
     pub fn new(input: String) -> Self {
         Lexer {
             input,
-            position: 0,
             start: 0,
             current: 0,
             tokens: Vec::new(),
@@ -26,7 +24,7 @@ impl Lexer {
             self.start = self.current;
             self.scan_token();
         }
-        self.tokens.push(Token::new(TokenType::EOF, "".to_string()));
+        self.tokens.push(Token::new(TokenType::Eof, "".to_string()));
         &self.tokens
     }
 
@@ -74,7 +72,7 @@ impl Lexer {
     }
 
     fn number(&mut self) {
-        while self.peek().is_digit(10) {
+        while self.peek().is_ascii_digit() {
             self.advance();
         }
         let text = &self.input[self.start..self.current];

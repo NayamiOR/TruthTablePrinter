@@ -18,7 +18,7 @@ pub enum TokenType{
     Num,
 
     Identifier,
-    
-    EOF,
+
+    Eof,
     Semicolon,
 }

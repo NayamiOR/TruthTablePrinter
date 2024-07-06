@@ -1,20 +1,13 @@
 use std::io;
 use std::io::Write;
+
 use crate::lexer;
 use crate::parser;
 use crate::truth_table_printer::TruthTablePrinter;
 
-pub struct Boolean {
-    has_error: bool,
-}
+pub struct Boolean;
 
 impl Boolean {
-    pub fn new() -> Self {
-        Boolean {
-            has_error: false,
-        }
-    }
-
     pub fn run() {
         loop {
             print!("$ ");
@@ -26,8 +19,8 @@ impl Boolean {
             let tokens = lexer.scan_tokens().clone();
 
             let mut parser = parser::Parser::new(tokens);
-            let statements= &parser.parse()[0];
-            let mut printer=TruthTablePrinter::new();
+            let statements = &parser.parse()[0];
+            let mut printer = TruthTablePrinter::new();
             printer.print(statements.clone());
         }
     }
